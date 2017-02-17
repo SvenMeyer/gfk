@@ -1,3 +1,10 @@
+# reads firehose data
+# start with empty pandas DataFrame
+# adds colums as new BehaviorIDs are being discovered
+# adds rows as new cookie-hhid-uid tuples are discovered
+# write resulting DataFrame as csv , picle and
+
+
 import os
 import time
 import json
@@ -5,13 +12,13 @@ import numpy as np
 import pandas as pd
 
 # OPEN FILE
-home = os.path.expanduser("~")
-# dir  = home + "/media/sumeyer/SSD_2/ML_DATA/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
-# dir  = home + "/ML_DATA/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
-dir  ="./"
-filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738.json"
-# filename = "test_sample.json"
-datafile = dir + filename
+home    = os.path.expanduser("~")
+inp_dir = "/ML_DATA/gfk/AWS_S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
+out_dir = "/ML_DATA/gfk/DE/"
+# filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
+filename = "test_sample"
+inp_ext  = "json"
+datafile = home + inp_dir + filename + '.' + inp_ext
 print("open file : ", datafile)
 
 idx_names = ['hhid','uid','cookieid']
@@ -47,13 +54,11 @@ print("df.index.has_duplicates = ", df.index.has_duplicates)
 print("generating statistics ...")
 print(df.describe(include='all'))
 
-filename_out = "DEtdv4_df_bin_slice_1000"
-
-df.to_pickle(dir + filename_out + '.pkl')  # where to save it, usually as a .pkl
+df.to_pickle(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl')  # where to save it, usually as a .pkl
 # df = pd.read_pickle(file_name)
 
-df.to_csv(dir + filename_out + '.csv', sep='\t')
+df.to_csv(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
 
-store = pd.HDFStore(filename_out + '.h5')
-store['bin_v1'] = df  # save it
+# store = pd.HDFStore(filename_out + '.h5')
+# store['filename'] = df  # save it
 # store['df']  # load it
