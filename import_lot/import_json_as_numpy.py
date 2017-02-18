@@ -4,6 +4,8 @@ import json
 import numpy as np
 import pandas as pd
 
+from sklearn.decomposition import PCA
+
 # OPEN FILE
 home    = os.path.expanduser("~")
 inp_dir = "/ML_DATA/gfk/AWS_S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
@@ -11,21 +13,21 @@ out_dir = "/ML_DATA/gfk/DE/"
 filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 inp_ext  = "json"
 datafile = home + inp_dir + filename + '.' + inp_ext
-# datafile = "./test_sample.json"
+datafile = "./test_sample2.json"
 print("open file : ", datafile)
 
 # Create large array to (hopefully) fit all cookies (rows) x BehaviorIDs (columns)
 array_size = (8192,32768)
-# array_size = (10,10)
-# na = np.full(array_size, np.nan, np.float32)
-na = np.zeros(array_size, np.uint32)
+array_type = np.uint32 # np.uint8 # np.uint32 # np.float32
+na = np.zeros(array_size, array_type)
+array_type_str = type(na[0,0]).__name__
 
 idx_names = ['hhid','uid','cookieid']
 # df = pd.DataFrame(columns=['hhid','uid','cookieid']) #, index=['hhid','uid','cookieid'])
 # df = df.set_index(['hhid','uid','cookieid'])
 
 # start import
-print("start import..."),
+print("start import into array of type ", array_type_str),
 start = time.time()
 
 i = 0
@@ -50,7 +52,7 @@ with open(datafile) as f:
         c = col_names[bh_id]
         r = row_names[cu_id]
         if d['featurevalue'] != 0:
-#            if na[r,c] < 255:
+#            if na[r,c] < 255: # uncomment for array_type = np.uint8
                 na[r,c] += 1
         if i % 1e6 == 0:
             print(int(i/1e6), 'million lines processed in' , (time.time() - start), "sec")
@@ -82,17 +84,34 @@ df.max(axis=0).hist(bins=100)
 # print("generating statistics ...")
 # print(df.describe(include='all'))
 
+# max number of PCA components = nuber of features/colums
+n_components_pca = 64
+if col_idx < n_components_pca:
+    n_components_pca = col_idx
+print("start PCA with n_components =", n_components_pca)
+start = time.time()
+pca = PCA(n_components=n_components_pca)
+pca.fit(na[0:row_idx,0:col_idx])
+print("DONE in ", (time.time() - start), "sec")
+pca_evr = pca.explained_variance_ratio_
+print("pca.explained_variance_ratio_ = ")
+print(pca_evr)
+ps = pd.Series(pca_evr)
+ps.plot()
+
 print("write pandas.DataFrame as picle file ...")
 start = time.time()
-df.to_pickle(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl')
+df.to_pickle(home + out_dir + filename + '_' + array_type_str + time.strftime("_%Y-%m-%d_%H-%M-%S") + array_type_str + '.pkl')
 print("DONE in ", (time.time() - start), "sec")
 # df = pd.read_pickle(file_name)
 '''
 print("write pandas.DataFrame as csv file ...")
 start = time.time()
-df.to_csv(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
+df.to_csv(home + out_dir + filename + '_' + array_type_str + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
 print("DONE in ", (time.time() - start), "sec")
 '''
 # store = pd.HDFStore(filename_out + '.h5')
 # store['filename'] = df  # save it
 # store['df']  # load it
+
+ps.to_csv(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '_pca_evr.csv', sep='\t')
