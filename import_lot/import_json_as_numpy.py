@@ -5,20 +5,20 @@ import numpy as np
 import pandas as pd
 
 # OPEN FILE
-home = os.path.expanduser("~")
-# dir  = home + "/media/sumeyer/SSD_2/ML_DATA/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
-# dir  = home + "/ML_DATA/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
-dir  ="./"
-# filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738.json"
-filename = "test_sample.json"
-datafile = dir + filename
+home    = os.path.expanduser("~")
+inp_dir = "/ML_DATA/gfk/AWS_S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
+out_dir = "/ML_DATA/gfk/DE/"
+filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
+inp_ext  = "json"
+datafile = home + inp_dir + filename + '.' + inp_ext
+# datafile = "./test_sample.json"
 print("open file : ", datafile)
 
 # Create large array to (hopefully) fit all cookies (rows) x BehaviorIDs (columns)
-array_size = (4096,32768)
-array_size = (10,10)
+array_size = (8192,32768)
+# array_size = (10,10)
 # na = np.full(array_size, np.nan, np.float32)
-na = np.zeros(array_size, np.uint8)
+na = np.zeros(array_size, np.uint32)
 
 idx_names = ['hhid','uid','cookieid']
 # df = pd.DataFrame(columns=['hhid','uid','cookieid']) #, index=['hhid','uid','cookieid'])
@@ -50,26 +50,49 @@ with open(datafile) as f:
         c = col_names[bh_id]
         r = row_names[cu_id]
         if d['featurevalue'] != 0:
-            na[r,c] += 1
-        
-
-print("col_idx   = ", col_idx)
-print("col_names = ", col_names)
-print("row_idx   = ", row_idx)
-for i,r in enumerate(row_names):
-    print(i,r,na[i])
-
+#            if na[r,c] < 255:
+                na[r,c] += 1
+        if i % 1e6 == 0:
+            print(int(i/1e6), 'million lines processed in' , (time.time() - start), "sec")
 
 time_fit = (time.time() - start)
 print(i, "lines processed")
 print("DONE in ", time_fit, "sec")
 
+print("col_idx   = ", col_idx)
+print("row_idx   = ", row_idx)
 
-print("create pandas.DatFrame from numpy-array, row_names and col_names ...")
+# print("col_names = ", col_names)
+# for i,r in enumerate(row_names):
+#    print(i,r,na[i])
+
+print("create pandas.DataFrame from numpy-array, row_names and col_names ...")
 start = time.time()
 # create sorted lists of row_names and col_names by index
 # http://pythoncentral.io/how-to-sort-python-dictionaries-by-key-or-value/
 # > Custom sorting algorithms with Python dictionaries
 df = pd.DataFrame(na[0:row_idx,0:col_idx], index=sorted(row_names, key=row_names.__getitem__), columns=sorted(col_names, key=col_names.__getitem__))
 print("DONE in ", (time.time() - start), "sec")
-print(df)
+# print(df)
+
+print("df.index.has_duplicates = ", df.index.has_duplicates)
+print("max value = ", df.max(axis=0).max())
+df.max(axis=0).hist(bins=100)
+
+# print("generating statistics ...")
+# print(df.describe(include='all'))
+
+print("write pandas.DataFrame as picle file ...")
+start = time.time()
+df.to_pickle(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '.pkl')
+print("DONE in ", (time.time() - start), "sec")
+# df = pd.read_pickle(file_name)
+'''
+print("write pandas.DataFrame as csv file ...")
+start = time.time()
+df.to_csv(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
+print("DONE in ", (time.time() - start), "sec")
+'''
+# store = pd.HDFStore(filename_out + '.h5')
+# store['filename'] = df  # save it
+# store['df']  # load it
