@@ -39,23 +39,25 @@ row_idx   = 0
 with open(datafile) as f:
     lines = f.readlines()
     for line in lines:
-        d = json.loads(line)
-        i += 1
-        bh_id = d['featurekey']
-        if bh_id not in col_names:
-            col_names[bh_id] = col_idx
-            col_idx += 1
-        cu_id = (d['hhid'],d['uid'],d['cookieid'])
-        if cu_id not in row_names:
-            row_names[cu_id] = row_idx
-            row_idx += 1      
-        c = col_names[bh_id]
-        r = row_names[cu_id]
-        if d['featurevalue'] != 0:
-#            if na[r,c] < 255: # uncomment for array_type = np.uint8
-                na[r,c] += 1
-        if i % 1e6 == 0:
-            print(int(i/1e6), 'million lines processed in' , (time.time() - start), "sec")
+        if line[0]=='{':         # if line does not start with curly bracket then it is comment or empty > ignore
+            d = json.loads(line)
+            i += 1
+            bh_id = d['featurekey']
+            if bh_id not in col_names:
+                col_names[bh_id] = col_idx
+                col_idx += 1
+            cu_id = (d['hhid'],d['uid'],d['cookieid']) # tuple
+            # cu_id = [d['hhid'],d['uid'],d['cookieid']] # list > ERROR unhashable
+            if cu_id not in row_names:
+                row_names[cu_id] = row_idx
+                row_idx += 1      
+            c = col_names[bh_id]
+            r = row_names[cu_id]
+            if d['featurevalue'] != 0:
+    #            if na[r,c] < 255: # uncomment for array_type = np.uint8
+                    na[r,c] += 1
+            if i % 1e6 == 0:
+                print(int(i/1e6), 'million lines processed in' , (time.time() - start), "sec")
 
 time_fit = (time.time() - start)
 print(i, "lines processed")
@@ -75,7 +77,8 @@ start = time.time()
 # > Custom sorting algorithms with Python dictionaries
 df = pd.DataFrame(na[0:row_idx,0:col_idx], index=sorted(row_names, key=row_names.__getitem__), columns=sorted(col_names, key=col_names.__getitem__))
 print("DONE in ", (time.time() - start), "sec")
-# print(df)
+
+print(df);print()
 
 print("df.index.has_duplicates = ", df.index.has_duplicates)
 print("max value = ", df.max(axis=0).max())
