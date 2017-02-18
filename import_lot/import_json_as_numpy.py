@@ -16,9 +16,9 @@ print("open file : ", datafile)
 
 # Create large array to (hopefully) fit all cookies (rows) x BehaviorIDs (columns)
 array_size = (4096,32768)
-array_size = (4,5)
+array_size = (10,10)
 # na = np.full(array_size, np.nan, np.float32)
-na = np.zeros(array_size, np.float32)
+na = np.zeros(array_size, np.uint8)
 
 idx_names = ['hhid','uid','cookieid']
 # df = pd.DataFrame(columns=['hhid','uid','cookieid']) #, index=['hhid','uid','cookieid'])
@@ -29,9 +29,9 @@ print("start import..."),
 start = time.time()
 
 i = 0
-col_names = {}
+col_names = {} # type dictionary (unsorted !) = {'LTMBEH_1': 0, 'LTMBEH_3': 1, 'LTMBEH_2': 2}
 col_idx   = 0
-row_names = {}
+row_names = {} # type dictionary (unsorted !) = {('0011', '01', 'cookie_2'): 1, ('0022', '01', 'cookie_1'): 0}
 row_idx   = 0
 
 with open(datafile) as f:
@@ -52,23 +52,24 @@ with open(datafile) as f:
         if d['featurevalue'] != 0:
             na[r,c] += 1
         
-        # print(i, d['hhid'],d['uid'],d['cookieid'],d['featurekey'],d['featurevalue'])
-        # make each line a real name-value dictionary
-        # dict_nv = {'hhid':d['hhid'] , 'uid':d['uid'] , 'cookieid':d['cookieid'] , d['featurekey']:d['featurevalue']}
-        # print(dict_nv)
-        # df.loc()
-
-        # print(df.loc['792611', '01', '12b31fa586482f2a9ca83b7c26b2ba8b'])
 
 print("col_idx   = ", col_idx)
 print("col_names = ", col_names)
 print("row_idx   = ", row_idx)
-# for i in range(0,row_idx):
-#    print(row_names[i] , na[i:])
+for i,r in enumerate(row_names):
+    print(i,r,na[i])
 
-df = pd.DataFrame(na, index=row_names, columns=col_names)
-  
 
 time_fit = (time.time() - start)
 print(i, "lines processed")
 print("DONE in ", time_fit, "sec")
+
+
+print("create pandas.DatFrame from numpy-array, row_names and col_names ...")
+start = time.time()
+# create sorted lists of row_names and col_names by index
+# http://pythoncentral.io/how-to-sort-python-dictionaries-by-key-or-value/
+# > Custom sorting algorithms with Python dictionaries
+df = pd.DataFrame(na[0:row_idx,0:col_idx], index=sorted(row_names, key=row_names.__getitem__), columns=sorted(col_names, key=col_names.__getitem__))
+print("DONE in ", (time.time() - start), "sec")
+print(df)
