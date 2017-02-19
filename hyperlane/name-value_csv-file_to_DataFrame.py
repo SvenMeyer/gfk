@@ -59,27 +59,30 @@ else:
 df = pd.read_csv(file_inp, sep=sep_str, names=['constant','hhid-uid','col_index','value']) # OK
 # df = pd.read_csv(file_inp, sep=sep_str, names=['constant','hhid-uid','col_index','value'], index_col='hhid-uid')
 
-# drop 'constant' column
-df.drop('constant', axis=1, inplace=True)
-
 time_fit = (time.time() - start)
 print("DONE in ", time_fit, "sec")
+print("read file into DataFrame - df.shape = ", df.shape)
 
-print("start convert DataFrame...", end='')
+print("start convert DataFrame...")
 start = time.time()
+
+# drop 'constant' column
+df.drop('constant', axis=1, inplace=True)
+print("droped 'constant' column - df.shape = ", df.shape)
 
 # print("unsorted ", df[0:20])
 # df.sort(columns=(['hhid-uid','col_index']) )            # deprecated sort - DO NOT USE
 df.sort_values(['hhid-uid','col_index'], inplace=True)  # sort optionally - for debugging
 # print("sorted ", df[0:20])
-# df = df.groupby(['hhid-uid','col_index'])['value'].mean().unstack(fill_value=0) # alternative option : average duplicates instead of just keeping last one
 
-# df.drop_duplicates(keep='last', inplace=True)
 df.drop_duplicates(keep='last', inplace=True) # remove rows which assign the same value again
-print("remove rows which assign the same value again - df.shape = ", df.shape)
+print("removed rows which assign the same value again - df.shape = ", df.shape)
 df.drop_duplicates(subset=['hhid-uid','col_index'], keep='last', inplace=True) # remove rows which assign new values (actually that should not happen)
-print("remove rows which assign new values (actually that should not happen) - df.shape = ", df.shape)
+print("removed rows which assign a new value (actually that should not happen) - df.shape = ", df.shape)
+
 df_table = df.set_index(['hhid-uid','col_index'])['value'].unstack(fill_value=0)
+# alternative option : average duplicates instead of just keeping last one
+# df = df.groupby(['hhid-uid','col_index'])['value'].mean().unstack(fill_value=0)
 
 time_fit = (time.time() - start)
 print("DONE in ", time_fit, "sec");print()
