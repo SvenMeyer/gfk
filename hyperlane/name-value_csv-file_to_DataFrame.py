@@ -37,7 +37,7 @@ if TEST==True:
 print("open file : ", file_inp)
 
 # start import
-print("start import..."),
+print("start import...", end=''),
 start = time.time()
 
 if file_ext_inp == ".tsv":
@@ -55,23 +55,25 @@ df.drop('constant', axis=1, inplace=True)
 time_fit = (time.time() - start)
 print("DONE in ", time_fit, "sec")
 
-print("start convert DataFrame..."),
+print("start convert DataFrame...", end='')
 start = time.time()
 
-# df.sort(columns=(['hhid-uid','col_index']) )
-# df = df.groupby(['hhid-uid','col_index'])['value'].mean().unstack(fill_value=0)
+# print("unsorted ", df[0:20])
+# df.sort(columns=(['hhid-uid','col_index']) )            # deprecated sort - DO NOT USE NAY MORE
+# df.sort_values(['hhid-uid','col_index'], inplace=True)  # sort optionally - for debugging
+# print("sorted ", df[0:20])
+# df = df.groupby(['hhid-uid','col_index'])['value'].mean().unstack(fill_value=0) # alternative option : average duplicates instead of just keeping last one
+
 df = df[df.duplicated(keep='last')]
 df_table = df.set_index(['hhid-uid','col_index'])['value'].unstack(fill_value=0)
 
 time_fit = (time.time() - start)
-print("DONE in ", time_fit, "sec")
+print("DONE in ", time_fit, "sec");print()
 
-# print first 10 rows
-# print(df[0:10])
 print(df_table[0:10])
-print("df_table.shape = ", df_table.shape)
+print("df_table.shape = ", df_table.shape);print()
 
-print("write pandas.DataFrame as csv file ...")
+print("write pandas.DataFrame as csv file ...", end='')
 start = time.time()
 df_table.to_csv(home + dir + filename_inp + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
 print("DONE in ", (time.time() - start), "sec")
