@@ -20,12 +20,19 @@ import json
 import numpy as np
 import pandas as pd
 
+TEST=True
+
 # OPEN FILE
 home = os.path.expanduser("~")
 dir  = "/ML_DATA/gfk/DE/hyperlane/"
-filename_inp = "targetgroup_attributes_DE_rev2"
+filename_inp = "./targetgroup_attributes_DE_rev2"
 file_ext_inp = ".tsv"
 file_inp = home + dir + filename_inp + file_ext_inp
+
+if TEST==True:
+    file_ext_inp = ".tsv"
+    file_inp = "./targetgroup_attributes_DE_rev2_sample100" + file_ext_inp
+
 print("open file : ", file_inp)
 
 # start import
@@ -40,6 +47,11 @@ else:
 # df = pd.read_csv(file_inp, sep=sep_str, header=None) # OK
 # df = pd.read_csv(file_inp, sep=sep_str, names=['constant','hhid-uid','col_index','value']) # OK
 df = pd.read_csv(file_inp, sep=sep_str, names=['constant','hhid-uid','col_index','value'], index_col='hhid-uid')
+
+# drop 'constant' column
+df.drop('constant', axis=1, inplace=True)
+
+# df_table = pd.DataFrame.from_items()
 
 
 time_fit = (time.time() - start)
