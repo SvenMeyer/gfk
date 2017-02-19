@@ -1,3 +1,15 @@
+'''
+import firehose data from name-value json
+
+- uses numpy array for data
+- used dictionary for column names
+- used dictionary for row/index names
+
+STATUS : working
+
+PROBLEM: index colum is a dictionay
+
+'''
 import os
 import time
 import json
@@ -76,6 +88,7 @@ start = time.time()
 # http://pythoncentral.io/how-to-sort-python-dictionaries-by-key-or-value/
 # > Custom sorting algorithms with Python dictionaries
 df = pd.DataFrame(na[0:row_idx,0:col_idx], index=sorted(row_names, key=row_names.__getitem__), columns=sorted(col_names, key=col_names.__getitem__))
+# df = pd.DataFrame(na[0:row_idx,0:col_idx], columns=sorted(col_names, key=col_names.__getitem__))
 print("DONE in ", (time.time() - start), "sec")
 
 print(df);print()
@@ -87,10 +100,10 @@ df.max(axis=0).hist(bins=100)
 # print("generating statistics ...")
 # print(df.describe(include='all'))
 
+quit()
+
 # max number of PCA components = nuber of features/colums
-n_components_pca = 64
-if col_idx < n_components_pca:
-    n_components_pca = col_idx
+n_components_pca = min(col_idx,64)
 print("start PCA with n_components =", n_components_pca)
 start = time.time()
 pca = PCA(n_components=n_components_pca)
