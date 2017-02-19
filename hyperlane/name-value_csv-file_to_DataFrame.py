@@ -12,6 +12,7 @@ ignore          hhid+uid  col_index   value
 1482105600      00005601        92      2
 1482105600      00005601        102     1
 
+http://stackoverflow.com/questions/42327346/read-csv-with-column-name-x-value-pairs
 
 '''
 import os
