@@ -29,21 +29,23 @@ import os
 import time
 import pandas as pd
 
-TEST=False
+TEST=True
 
 # OPEN FILE
 home = os.path.expanduser("~")
-dir  = "/ML_DATA/gfk/DE/hyperlane/"
-filename_inp = "./targetgroup_attributes_DE_rev2"
+dir  = home + "/ML_DATA/gfk/DE/hyperlane/"
+filename_inp = "./targetgroup_attributes_DE_rev2_sample100"
 file_ext_inp = ".tsv"
-file_inp = home + dir + filename_inp + file_ext_inp
+
 
 if TEST==True:
+    dir = "./"
+    file_inp = "./targetgroup_attributes_DE_rev2_sample100"
+    # file_inp = "test"
+    # file_inp = "test_duplicate"
     file_ext_inp = ".tsv"
-    file_inp = "./targetgroup_attributes_DE_rev2_sample100" + file_ext_inp
-    file_inp = "./test.tsv"
-    # file_inp = "./test_duplicate.tsv"
 
+file_inp = dir + filename_inp + file_ext_inp
 print("open file : ", file_inp)
 
 # start import
@@ -92,5 +94,5 @@ print("df_table.shape = ", df_table.shape);print()
 
 print("write pandas.DataFrame as csv file ...", end='')
 start = time.time()
-df_table.to_csv(home + dir + filename_inp + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
+df_table.to_csv(dir + filename_inp + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
 print("DONE in ", (time.time() - start), "sec")
