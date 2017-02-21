@@ -32,24 +32,20 @@ import os
 import time
 import pandas as pd
 
-TEST=False
+TEST=True
 
 # OPEN FILE
 home = os.path.expanduser("~")
 home = "/media/sf_SHARE"
 dir  = home + "/ML_DATA/gfk/DE/hyperlane/"
-filename_inp = "GXL_Panel_query_result_gender_2017-01"
+filename = "GXL_Panel_query_result_2017-01"
+filename = "HUE_query_result_id209-id227_Pet-Baby"
 file_ext_inp = ".csv"
 
-
 if TEST==True:
-    dir = "./"
-    file_inp = "./targetgroup_attributes_DE_rev2_sample100"
-    # file_inp = "test"
-    # file_inp = "test_duplicate"
-    file_ext_inp = ".tsv"
+    filename += "_test"
 
-file_inp = dir + filename_inp + file_ext_inp
+file_inp = dir + filename + file_ext_inp
 print("open file : ", file_inp)
 
 # start import
@@ -71,9 +67,9 @@ print("column names = ", df.columns.values)
 print("start convert DataFrame...")
 start = time.time()
 
-person_id = "person_id"
-attribute_id = "attribute_id"
-attribute_value_id = "attribute_value_id"
+person_id          = df.columns.values[0]
+attribute_id       = df.columns.values[1]
+attribute_value_id = df.columns.values[2]
 
 # drop 'constant' column
 # df.drop('constant', axis=1, inplace=True)
@@ -84,10 +80,18 @@ attribute_value_id = "attribute_value_id"
 df.sort_values(['person_id','attribute_id'], inplace=True)  # sort optionally - for debugging
 # print("sorted ", df[0:20])
 
-df.drop_duplicates(keep='last', subset=[person_id, attribute_id, attribute_value_id], inplace=True) # remove rows which assign the same value again
-print("removed rows which assign the same value again - df.shape = ", df.shape)
-df.drop_duplicates(subset=['person_id','attribute_id'], keep='last', inplace=True) # remove rows which assign new values (actually that should not happen)
-print("removed rows which assign a new value (actually that should not happen) - df.shape = ", df.shape)
+df_shape = df.shape
+print("before checkig and removing duplicates - df.shape = ", df_shape)
+
+df.drop_duplicates(subset=[person_id, attribute_id, attribute_value_id], keep='last', inplace=True) # remove rows which assign the same value again
+if df.shape != df_shape:
+    print("removed rows which assign the same value again - df.shape = ", df.shape)
+    df_shape = df.shape
+
+df.drop_duplicates(subset=[person_id, attribute_id], keep='last', inplace=True) # remove rows which assign new values (actually that should not happen)
+if df.shape != df_shape:
+    print("removed rows which assign a new value (actually that should not happen) - df.shape = ", df.shape)
+    df_shape = df.shape
 
 df_table = df.set_index(['person_id','attribute_id'])['attribute_value_id'].unstack(fill_value=0)
 # alternative option : average duplicates instead of just keeping last one
@@ -101,5 +105,5 @@ print("df_table.shape = ", df_table.shape);print()
 
 print("write pandas.DataFrame as csv file ...", end='')
 start = time.time()
-df_table.to_csv(dir + filename_inp + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
+df_table.to_csv(dir + "out/" + filename + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
 print("DONE in ", (time.time() - start), "sec")
