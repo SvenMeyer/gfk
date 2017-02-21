@@ -2,32 +2,17 @@
 HUE_query_result_to_DataFrame.py
 @author : Sven Meyer
 
+example input file:
 
-importdf"name (column-index) x value" tabular tsv file
-
-input format:
-ignore          hhid+uid  attribute_id   value
-1482105600      00005601        25      1
-1482105600      00005601        35      0
-1482105600      00005601        45      0
-1482105600      00005601        57      0
-1482105600      00005601        82      0
-1482105600      00005601        92      2
-1482105600      00005601        102     1
-
-http://stackoverflow.com/questions/42327346/read-csv-with-column-name-x-value-pairs
-
-df = df.drop_duplicates(keep='last')
-
-df.shape
-Out[140]: (2606244, 3)
-
-df = df.drop_duplicates(subset=['person_id','attribute_id'], keep='last')
-
-df.shape
-Out[142]: (2433941, 3)
+person_id,attribute_id,attribute_value_id,slice_year,slice_month,slice_start,v_loading_time
+00005601,212,0,2017,01,2017-01-01,2017-02-16T15-10-41-175Z
+00005601,222,0,2017,01,2017-01-01,2017-02-16T15-10-41-175Z
+00008501,212,0,2017,01,2017-01-01,2017-02-16T15-10-41-175Z
+00008501,222,0,2017,01,2017-01-01,2017-02-16T15-10-41-175Z
+00008901,212,0,2017,01,2017-01-01,2017-02-16T15-10-41-175Z
 
 '''
+
 import os
 import time
 import pandas as pd
