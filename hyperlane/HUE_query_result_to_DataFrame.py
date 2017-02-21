@@ -17,14 +17,20 @@ import os
 import time
 import pandas as pd
 
-TEST=True
+TEST=False
 
 # OPEN FILE
 home = os.path.expanduser("~")
 home = "/media/sf_SHARE"
-dir  = home + "/ML_DATA/gfk/DE/hyperlane/"
-filename = "GXL_Panel_query_result_2017-01"
-filename = "HUE_query_result_id209-id227_Pet-Baby"
+dir  = home + "/ML_DATA/gfk/DE/Hyperlane/HUE_2017-01/"
+
+filename = "HUE_query_result_a001-a050_2017-01"
+filename = "HUE_query_result_a051-a100_2017-01"
+filename = "HUE_query_result_a101-a150_2017-01"
+filename = "HUE_query_result_a150-a208_2017-01"
+filename = "HUE_query_result_a209-a227_2017-01_Pet-Baby"
+filename = "DE_gfk_2017-01"
+
 file_ext_inp = ".csv"
 
 if TEST==True:
@@ -56,14 +62,7 @@ person_id          = df.columns.values[0]
 attribute_id       = df.columns.values[1]
 attribute_value_id = df.columns.values[2]
 
-# drop 'constant' column
-# df.drop('constant', axis=1, inplace=True)
-# print("droped 'constant' column - df.shape = ", df.shape)
-
-# print("unsorted ", df[0:20])
-# df.sort(columns=(['person_id','attribute_id']) )            # deprecated sort - DO NOT USE
-df.sort_values(['person_id','attribute_id'], inplace=True)  # sort optionally - for debugging
-# print("sorted ", df[0:20])
+# df.sort_values(['person_id','attribute_id'], inplace=True)  # sort optionally - for debugging
 
 df_shape = df.shape
 print("before checkig and removing duplicates - df.shape = ", df_shape)
