@@ -7,7 +7,7 @@ import firehose data from name-value json
 
 STATUS : working
 
-PROBLEM: index colum is a dictionay
+PROBLEM: ugly code, performance is not so good
 
 '''
 import os
@@ -24,8 +24,8 @@ inp_dir = "/ML_DATA/gfk/AWS_S3/programmatic-dataprovider/data/de/training-datase
 out_dir = "/ML_DATA/gfk/DE/"
 filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 inp_ext  = "json"
-# datafile = home + inp_dir + filename + '.' + inp_ext
-datafile = "./test_sample2.json"
+datafile = home + inp_dir + filename + '.' + inp_ext
+# datafile = "./test_sample2.json"
 print("open file : ", datafile)
 
 # Create large array to (hopefully) fit all cookies (rows) x BehaviorIDs (columns)
