@@ -20,7 +20,7 @@ from sklearn.decomposition import PCA
 
 # OPEN FILE
 home    = os.path.expanduser("~")
-inp_dir = "/ML_DATA/gfk/AWS_S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
+inp_dir = "/ML_DATA/gfk/S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
 out_dir = "/ML_DATA/gfk/DE/"
 filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 inp_ext  = "json"
