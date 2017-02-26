@@ -18,8 +18,12 @@ import pandas as pd
 
 from sklearn.decomposition import PCA
 
+import sklearn
+print("sklearn version = ", sklearn.__version__)
+
 # OPEN FILE
 home    = os.path.expanduser("~")
+home = "/media/sf_SHARE"
 inp_dir = "/ML_DATA/gfk/S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
 out_dir = "/ML_DATA/gfk/DE/"
 filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
