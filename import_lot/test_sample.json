@@ -1,6 +1,15 @@
-{"cookieid":"cookie_1","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"22","uid":"01"}
-{"cookieid":"cookie_1","featurekey":"LTMBEH_1","featurevalue":2,"hhid":"22","uid":"01"}
-{"cookieid":"cookie_1","featurekey":"LTMBEH_3","featurevalue":3,"hhid":"22","uid":"01"}
-{"cookieid":"cookie_2","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"11","uid":"01"}
-{"cookieid":"cookie_2","featurekey":"LTMBEH_2","featurevalue":1,"hhid":"11","uid":"01"}
-{"cookieid":"cookie_2","featurekey":"LTMBEH_3","featurevalue":1,"hhid":"11","uid":"01"}
+# person 1 with one cookie
+{"cookieid":"cookie_1","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"11","uid":"01"}
+{"cookieid":"cookie_1","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"11","uid":"01"}
+{"cookieid":"cookie_1","featurekey":"LTMBEH_3","featurevalue":1,"hhid":"11","uid":"01"}
+# person 2 with one cookie
+{"cookieid":"cookie_2","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"22","uid":"01"}
+{"cookieid":"cookie_2","featurekey":"LTMBEH_2","featurevalue":1,"hhid":"22","uid":"01"}
+{"cookieid":"cookie_2","featurekey":"LTMBEH_3","featurevalue":1,"hhid":"22","uid":"01"}
+# one person having 2 cookies
+{"cookieid":"cookie_A","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"33","uid":"01"}
+{"cookieid":"cookie_B","featurekey":"LTMBEH_2","featurevalue":1,"hhid":"33","uid":"01"}
+# 2 people in same hausehold sharing one cookie
+{"cookieid":"cookie_S","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"44","uid":"01"}
+{"cookieid":"cookie_S","featurekey":"LTMBEH_2","featurevalue":1,"hhid":"44","uid":"01"}
+{"cookieid":"cookie_S","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"44","uid":"02"}
