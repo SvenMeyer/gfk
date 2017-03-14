@@ -47,13 +47,16 @@ import json
 from collections import defaultdict
 from sklearn.decomposition import PCA
 
+test = True
+
 # OPEN FILE
 home    = os.path.expanduser("~")
 inp_dir = "/ML_DATA/gfk/S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
 filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 inp_ext  = "json"
 datafile = home + inp_dir + filename + '.' + inp_ext
-# datafile = "./test_sample2.json"
+if test:
+    datafile = "./test_sample.json"
 
 out_dir = "/ML_DATA/gfk/DE/"
 
@@ -93,8 +96,15 @@ print("DONE in ", (time.time() - start), "sec")
 # remove MultiIndex, set index to cokkie colum only
 df_table = df_table.reset_index()
 
+# count frequency per cookie
+# df_table['freq'] = df_table.sum(axis=1)-df_table['hhid-uid']
+
+
 df_table_shape = df_table.shape
 print("before checkig and removing duplicates - df.shape = ", df_table.shape)
+if test:
+    print(df_table)
+
 # remove entries with same cookie (for different hhid-uid)
 df_table.drop_duplicates(subset='cookieid', keep=False, inplace=True)
 if df_table_shape != df_table.shape:
@@ -106,8 +116,11 @@ print("n_panel_unique =", n_panel_unique)
 if df_table.shape[0] != df_table['cookieid'].unique().shape[0]:
     print("WARNING: cookieid not unique")
     
-# print first 10 lines, first 6 columns
-print(df_table.iloc[:10,[0,1,2,3,4,5]])
+if test:
+    print(df_table)
+else:
+    # print first 10 lines, first 6 columns
+    print(df_table.iloc[:10,[0,1,2,3,4,5]])
 
 print("write pandas.DataFrame as picle file ...")
 start = time.time()
@@ -128,6 +141,7 @@ first_feature_colname = df_table.columns[3]
 na = df_table.ix[:,first_feature_colname:]
 print("na.shape = ", na.shape)
 
+'''
 # max number of PCA components = nuber of features/colums
 n_components_pca = min(na.shape[1],256)
 print("start PCA with n_components =", n_components_pca)
@@ -140,5 +154,5 @@ print("pca.explained_variance_ratio_ = ")
 print(pca_evr)
 ps = pd.Series(pca_evr)
 ps.plot()
-
 ps.to_csv(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '_pca_evr.csv', sep='\t')
+'''
