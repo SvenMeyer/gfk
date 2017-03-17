@@ -7,18 +7,20 @@ DATA_DIR = "/media/sf_SHARE/ML_DATA/GFK/DE/Hyperlane/unimputed-target-groups/201
 COL_NAME_FILE = "pig_header"
 FILE_WILDCARD = "part-r-?????"
 
-# does not work if sep is specified
-# df = pd.concat(map(pd.read_csv, glob.glob(os.path.join(DATA_DIR,FILE_WILDCARD))))
-# df = pd.concat(map(pd.read_csv(sep=';'), glob.glob(os.path.join(DATA_DIR,FILE_WILDCARD))))
-
 header_file = open(os.path.join(DATA_DIR, COL_NAME_FILE), 'r')
 header_list = header_file.readline().split(';')
 
 data_files = glob.glob(os.path.join(DATA_DIR,FILE_WILDCARD))
 
-# short / non-verbose version
+# version 1 : does not work if sep is specified
+# df = pd.concat(map(pd.read_csv,          data_files))
+# df = pd.concat(map(pd.read_csv(sep=';'), data_files))
+
+# version 2 : short / non-verbose version
 # df_from_each_file = (pd.read_csv(f, sep=';', header=None) for f in all_files)
 # df   = pd.concat(df_from_each_file, ignore_index=True)
+
+# version 3 : verbose
 
 df = pd.DataFrame()
 for filename in data_files:
@@ -32,8 +34,8 @@ if len(header_list) == df.shape[1]:
     df.columns = header_list
 else:
     print("ERROR")
-    print("dataframe.shape = ", df.shape)
-    print("number of column names = ", len(header_list))
+    print("number of dataframe columns = ", df.shape[1])
+    print("number of column names      = ", len(header_list))
 
 df.set_index(header_list[0], inplace=True)
 
