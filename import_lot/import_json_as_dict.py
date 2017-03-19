@@ -47,18 +47,23 @@ import json
 from collections import defaultdict
 from sklearn.decomposition import PCA
 
-test = True
+TEST = False
+
+COL_NAME_PID ="pnr"
 
 # OPEN FILE
-home    = os.path.expanduser("~")
-inp_dir = "/ML_DATA/gfk/S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
-filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
+
+if TEST:
+    home     = ""
+    inp_dir  = ""
+    filename = "test_sample"
+else:
+    home    = os.path.expanduser("~")
+    inp_dir = "/ML_DATA/GFK/S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
+    filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 inp_ext  = "json"
 datafile = home + inp_dir + filename + '.' + inp_ext
-if test:
-    datafile = "./test_sample.json"
-
-out_dir = "/ML_DATA/gfk/DE/"
+out_dir = os.path.expanduser("~") + "/ML_DATA/GFK/DE/"
 
 print("open file : ", datafile)
 
@@ -74,7 +79,6 @@ with open(datafile) as f:
         if line[0]=='{':         # if line does not start with curly bracket then it is comment or empty > ignore
             d = json.loads(line)
             i += 1
-
             key = (int(d['hhid']+d['uid']), d['cookieid'], d['featurekey'])
             if d['featurevalue'] != 0:
                 # dd[d['hhid']+d['uid'], d['cookieid'], d['featurekey']] += 1
@@ -88,21 +92,29 @@ print(i, 'lines processed in' , (time.time() - start), "sec")
 
 print("create pandas.DataFrame from dict ... ", end='')
 start = time.time()
-df=pd.DataFrame(list(dd.keys()), columns=['hhid-uid','cookieid','featurekey'])
+df=pd.DataFrame(list(dd.keys()), columns=[COL_NAME_PID,'cookieid','featurekey'])
 df['sum'] = pd.Series(list(dd.values()))
-df_table = df.set_index(['hhid-uid','cookieid','featurekey'])['sum'].unstack(fill_value=0)
+n_events = sum(df['sum'])
+if i != n_events:
+    print("ERROR - we have lost events !")
+    print("sum(df['sum']) = ", n_events)
+    
+df_table = df.set_index([COL_NAME_PID,'cookieid','featurekey'])['sum'].unstack(fill_value=0)
 print("DONE in ", (time.time() - start), "sec")
+n_events = df_table.sum(numeric_only=True).sum()
+if i != n_events:
+    print("ERROR - we have lost events !")
+    print("df_table.sum(numeric_only=True).sum() = ", n_events)
 
-# remove MultiIndex, set index to cokkie colum only
+# remove MultiIndex, set index to cookie column only
 df_table = df_table.reset_index()
 
 # count frequency per cookie
-# df_table['freq'] = df_table.sum(axis=1)-df_table['hhid-uid']
-
+# df_table['freq'] = df_table.sum(axis=1)-df_table[COL_NAME_PID]
 
 df_table_shape = df_table.shape
 print("before checkig and removing duplicates - df.shape = ", df_table.shape)
-if test:
+if TEST:
     print(df_table)
 
 # remove entries with same cookie (for different hhid-uid)
@@ -110,34 +122,44 @@ df_table.drop_duplicates(subset='cookieid', keep=False, inplace=True)
 if df_table_shape != df_table.shape:
     print("removed rows with drop_duplicate cookies - df_table.shape = ", df_table.shape)
 
-n_panel_unique = df_table['hhid-uid'].unique().shape[0]
+n_panel_unique = df_table[COL_NAME_PID].unique().shape[0]
 print("n_panel_unique =", n_panel_unique)
 
 if df_table.shape[0] != df_table['cookieid'].unique().shape[0]:
     print("WARNING: cookieid not unique")
     
-if test:
-    print(df_table)
-else:
-    # print first 10 lines, first 6 columns
-    print(df_table.iloc[:10,[0,1,2,3,4,5]])
+df_table.drop('LEOCOOKIEFREQ', axis=1, inplace=True, errors='ignore') # errors='raise')
+df_table.set_index(COL_NAME_PID, inplace=True)
 
-print("write pandas.DataFrame as picle file ...")
+print(df_table.iloc[:10,:5])
+
+print("events in final table = ", df_table.sum(numeric_only=True).sum())
+print("histogram : no of LOTBEH with 0 .. 99 panel visitor")
+el = df_table.astype(bool).sum(axis=0)      # count no of non-zero entries for each LOTBEH
+el[el<100].hist(bins=100, figsize=(10,10))
+# drop LOTBET columns with very few entries (panel members)
+MIN_panel_per_LOTBEH = 4
+df_table.drop(el.index[el < MIN_panel_per_LOTBEH], axis=1, inplace=True)
+print("removed LOTBEH columns with less than",  MIN_panel_per_LOTBEH, "entries (panel members) - df_table.shape = ", df_table.shape)
+
+ep = df_table.astype(bool).sum(axis=1)
+
+print("write pandas.DataFrame as picle file ... ", end="")
 start = time.time()
-df_table.to_pickle(home + out_dir + filename + '_' + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.pkl')
+df_table.to_pickle(out_dir + filename + '.pkl')
 print("DONE in ", (time.time() - start), "sec")
 # df = pd.read_pickle(file_name)
-'''
-print("write pandas.DataFrame as csv file ...")
+
+print("write pandas.DataFrame as csv file ... ", end="")
 start = time.time()
-df_data.to_csv(home + out_dir + filename + '_' + time.strftime("_%Y-%m-%d_%H-%M-%S") + '.csv', sep='\t')
+df_table.to_csv(out_dir + filename + '.csv', sep='\t')
 print("DONE in ", (time.time() - start), "sec")
-'''
+
 # store = pd.HDFStore(filename_out + '.h5')
 # store['filename'] = df  # save it
 # store['df']  # load it
 
-first_feature_colname = df_table.columns[3]
+first_feature_colname = df_table.columns[2]
 na = df_table.ix[:,first_feature_colname:]
 print("na.shape = ", na.shape)
 
@@ -154,5 +176,5 @@ print("pca.explained_variance_ratio_ = ")
 print(pca_evr)
 ps = pd.Series(pca_evr)
 ps.plot()
-ps.to_csv(home + out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '_pca_evr.csv', sep='\t')
+ps.to_csv(out_dir + filename + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + '_pca_evr.csv', sep='\t')
 '''
