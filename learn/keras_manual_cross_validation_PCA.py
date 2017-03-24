@@ -58,8 +58,8 @@ df = pd.merge(df_Lot, df_GXL[[COL_NAME_PID, TARGET]], on=COL_NAME_PID, how='inne
 print(df.shape)
 # print(df)
 
-# df.drop(df[TARGET]==-1, axis=0)
-df = df[df[TARGET != -1]]
+# df = df[df[TARGET] != -1]
+df.drop(df.index[df[TARGET] == -1], inplace=True)
 print("after dropping NO DATA rows : df.shape =", df.shape)
 
 # extract features and target into numpy ndarry
