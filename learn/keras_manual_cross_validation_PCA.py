@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from keras.models import Sequential
 from keras.layers import Dense
+from sklearn import preprocessing
 from sklearn import decomposition
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import cohen_kappa_score, confusion_matrix, accuracy_score
@@ -14,6 +15,7 @@ from sklearn.metrics import cohen_kappa_score, confusion_matrix, accuracy_score
 # import matplotlib.pyplot as plt
 
 TEST = False
+PCA  = True
 
 HOME_DIR = "/media/sf_SHARE"
 if not os.path.isdir(HOME_DIR):
@@ -59,19 +61,22 @@ print(df.shape)
 # print(df)
 
 # df = df[df[TARGET] != -1]
-df.drop(df.index[df[TARGET] == -1], inplace=True)
+df.drop(df.index[df[TARGET] == -1], inplace=True) # df[TARGET] = df.iloc[:,-1]
 print("after dropping NO DATA rows : df.shape =", df.shape)
 
-# extract features and target into numpy ndarry
 X_data = df.iloc[:,2:-1].values.astype('float32')
-Y_data = df.iloc[:,-1].values.astype('float32')
+std_scale = preprocessing.StandardScaler().fit(X_data)
+X_data = std_scale.transform(X_data)
 
-pca = decomposition.PCA(n_components=128)
-pca.fit(X_data)
-X_data = pca.transform(X_data)
+if PCA:
+    pca = decomposition.PCA(n_components=128)
+    pca.fit(X_data)
+    X_data = pca.transform(X_data)
 print("X_data.shape = ", X_data.shape)
 
-Y_data = Y_data - 1
+Y_data = df.iloc[:,-1].values.astype('float32').reshape(-1, 1)  # reshape because StandardScaler does not accept 1d arrays any more
+minmax_scale = preprocessing.MinMaxScaler().fit(Y_data)
+Y_data = minmax_scale.transform(Y_data).ravel()                 # ravel back to 1d array
 
 X, X_test, Y, Y_test = train_test_split(X_data, Y_data, test_size=0.2, random_state=1)
 
