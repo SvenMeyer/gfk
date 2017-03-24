@@ -54,16 +54,18 @@ COL_NAME_PID ="pnr"
 # OPEN FILE
 
 if TEST:
-    home     = ""
+    HOME_DIR     = ""
     inp_dir  = ""
     filename = "test_sample"
 else:
-    home    = os.path.expanduser("~")
+    HOME_DIR = "/media/sf_SHARE"
+    if not os.path.isdir(HOME_DIR):
+        HOME_DIR = os.path.expanduser("~")
     inp_dir = "/ML_DATA/GFK/S3/programmatic-dataprovider/data/de/training-datasets/v4/features.out.json/"
     filename = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 inp_ext  = "json"
-datafile = home + inp_dir + filename + '.' + inp_ext
-out_dir = os.path.expanduser("~") + "/ML_DATA/GFK/DE/Lotame"
+datafile = HOME_DIR + inp_dir + filename + '.' + inp_ext
+out_dir  = HOME_DIR + "/ML_DATA/GFK/DE/Lotame/"
 
 print("open file : ", datafile)
 
@@ -146,15 +148,17 @@ print("removed LOTBEH columns with less than", MIN_panel_per_LOTBEH, "entries (p
 
 ep = df_Lot.astype(bool).sum(axis=1)
 
-print("write pandas.DataFrame as picle file ... ", end="")
+output_file = out_dir + filename + '.pkl'
+print("write pandas.DataFrame as picle file :", output_file, end=" ... ")
 start = time.time()
-df_Lot.to_pickle(out_dir + filename + '.pkl')
+df_Lot.to_pickle(output_file)
 print("DONE in ", (time.time() - start), "sec")
 # df = pd.read_pickle(file_name)
 
-print("write pandas.DataFrame as csv file ... ", end="")
+output_file = out_dir + filename + '.tsv'
+print("write pandas.DataFrame as  tsv  file :", output_file, end=" ... ")
 start = time.time()
-df_Lot.to_csv(out_dir + filename + '.tsv', sep='\t')
+df_Lot.to_csv(output_file, sep='\t')
 print("DONE in ", (time.time() - start), "sec")
 
 # store = pd.HDFStore(filename_out + '.h5')
