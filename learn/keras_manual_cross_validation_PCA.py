@@ -1,5 +1,6 @@
 import os
 import glob
+import time
 import pandas as pd
 import numpy
 import tensorflow as tf
@@ -8,22 +9,27 @@ from keras.models import Sequential
 from keras.layers import Dense
 from sklearn import decomposition
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from sklearn.metrics import cohen_kappa_score, confusion_matrix
+from sklearn.metrics import cohen_kappa_score, confusion_matrix, accuracy_score
+
 # import matplotlib.pyplot as plt
 
 TEST = False
-COL_NAME_PID ="pnr"
 
-HOME_DIR = os.path.expanduser("~")
+HOME_DIR = "/media/sf_SHARE"
+if not os.path.isdir(HOME_DIR):
+    HOME_DIR = os.path.expanduser("~")
 LOT_DIR  = "/ML_DATA/GFK/DE/Lotame/"
 LOT_FILE = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 GXL_DIR  = "/ML_DATA/GFK/DE/Hyperlane/unimputed-target-groups/2017-02-01/"
 GXL_FILE = "GXL_data.tsv"
 TARGET   = "dep_tg_bin_gender_1"
+TARGET   = "dep_tg_bin_pet_owner_209"
 
 if TEST:
     LOT_FILE = "Lot_data_test"
     GXL_FILE = "GXL_data_test.tsv"
+
+COL_NAME_PID ="pnr"
 
 df_GXL = pd.read_csv(HOME_DIR + GXL_DIR + GXL_FILE, sep='\t', dtype=numpy.int32)
 print("df_GXL.shape = ", df_GXL.shape)
@@ -52,11 +58,15 @@ df = pd.merge(df_Lot, df_GXL[[COL_NAME_PID, TARGET]], on=COL_NAME_PID, how='inne
 print(df.shape)
 # print(df)
 
+# df.drop(df[TARGET]==-1, axis=0)
+df = df[df[TARGET != -1]]
+print("after dropping NO DATA rows : df.shape =", df.shape)
+
 # extract features and target into numpy ndarry
 X_data = df.iloc[:,2:-1].values.astype('float32')
 Y_data = df.iloc[:,-1].values.astype('float32')
 
-pca = decomposition.PCA(n_components=256)
+pca = decomposition.PCA(n_components=128)
 pca.fit(X_data)
 X_data = pca.transform(X_data)
 print("X_data.shape = ", X_data.shape)
@@ -68,6 +78,7 @@ X, X_test, Y, Y_test = train_test_split(X_data, Y_data, test_size=0.2, random_st
 seed = 7
 numpy.random.seed(seed)
 
+start = time.time()
 with tf.device('/cpu:0'):
     kfold = StratifiedKFold(n_splits=10, shuffle=True) #, random_state=seed)
     cvscores = []
@@ -81,6 +92,7 @@ with tf.device('/cpu:0'):
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         # Fit the model
         history = model.fit(X[train], Y[train], nb_epoch=150, batch_size=10, verbose=1)
+        print("DONE in ", (time.time() - start), "sec")
         # evaluate the model
         scores = model.evaluate(X[validate], Y[validate], verbose=0)
         print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
