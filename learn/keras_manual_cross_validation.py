@@ -6,6 +6,8 @@ import numpy
 from keras.models import Sequential
 from keras.layers import Dense
 from sklearn.model_selection import StratifiedKFold
+from sklearn import decomposition
+from sklearn import datasets
 
 TEST = False
 COL_NAME_PID ="pnr"
@@ -51,6 +53,8 @@ print(df.shape)
 # extract features and target into numpy ndarry
 X = df.iloc[:,2:-1].values.astype('float32')
 Y = df.iloc[:,-1].values.astype('float32')
+
+Y = Y - 1
 
 seed = 7
 numpy.random.seed(seed)

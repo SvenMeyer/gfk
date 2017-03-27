@@ -20,7 +20,7 @@ import numpy as np
 a = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=int)
 b = copy.deepcopy(a)
 print(a)
-for i in range(11):
+for i in range(10):
     print("cohen_kappa_score = ", cohen_kappa_score(a,b),end="")
     print(" - accuracy_score    = ", accuracy_score(a,b))
     b[i]=0

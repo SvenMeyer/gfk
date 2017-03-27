@@ -85,7 +85,7 @@ time_fit = (time.time() - start)
 print("DONE in ", time_fit, "sec");print()
 
 print(df_table[0:10])
-print("df_table.shape = ", df_table.shape);print()
+print("df_Lot.shape = ", df_table.shape);print()
 
 print("write pandas.DataFrame as csv file ...", end='')
 start = time.time()

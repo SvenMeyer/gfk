@@ -10,7 +10,6 @@ import glob
 import time
 import pandas as pd
 import numpy
-import math
 import tensorflow as tf
 
 import keras
@@ -27,10 +26,8 @@ print("tensorflow.__version__ = ", tf.__version__)
 # import matplotlib.pyplot as plt
 
 TEST = False
-PCA  = False
+PCA  = True
 PCA_comp = 256
-NORM = True
-
 
 HOME_DIR = "/media/sf_SHARE"
 if not os.path.isdir(HOME_DIR):
@@ -81,20 +78,13 @@ df.drop(df.index[df[TARGET] == -1], inplace=True) # df[TARGET] = df.iloc[:,-1]
 print("after dropping NO DATA rows : df.shape =", df.shape)
 
 X_data = df.iloc[:,2:-1].values.astype('float32')
+std_scale = preprocessing.StandardScaler().fit(X_data)
+X_data = std_scale.transform(X_data)
 
-if NORM:
-    norm_scale = preprocessing.Normalizer(copy=False).fit(X_data)
-    X_data = norm_scale.transform(X_data)
-else:
-    std_scale = preprocessing.StandardScaler(copy=False).fit(X_data)
-    X_data = std_scale.transform(X_data)
-    if PCA:
-        print("Start PCA", PCA_comp," ... ", end="")
-        pca = decomposition.PCA(n_components=PCA_comp)
-        pca.fit(X_data)
-        X_data = pca.transform(X_data)
-        print("DONE in ", (time.time() - start), "sec")
-    
+if PCA:
+    pca = decomposition.PCA(n_components=PCA_comp)
+    pca.fit(X_data)
+    X_data = pca.transform(X_data)
 print("X_data.shape = ", X_data.shape)
 
 Y_data = df.iloc[:,-1].values.astype('float32').reshape(-1, 1)  # reshape because StandardScaler does not accept 1d arrays any more
@@ -114,14 +104,9 @@ tbCallback = keras.callbacks.TensorBoard(log_dir=HOME_DIR+'/ML_DATA/Tensorboard'
 # callbacks_list = [checkpoint, tbCallback]
 callbacks_list = [tbCallback]
 
-n_layer_1 = X.shape[1]
-n_layer_2 = 2**math.ceil(math.log2(math.sqrt(n_layer_1)))
-print("n_layer_1 = ", n_layer_1)
-print("n_layer_2 = ", n_layer_2)
-
 i = 1
 no_splits=10
-with tf.device("/gpu:0"):
+with tf.device('/gpu:0'):
     kfold = StratifiedKFold(n_splits=no_splits, shuffle=True) #, random_state=seed)
     cvscores = []
     for train, validate in kfold.split(X, Y):
@@ -129,9 +114,9 @@ with tf.device("/gpu:0"):
         start = time.time()
       # create model
         model = Sequential()
-        model.add(Dense(n_layer_1, input_dim=n_layer_1, kernel_initializer='glorot_uniform', activation='relu'))
-        model.add(Dense(n_layer_2, kernel_initializer='glorot_uniform', activation='relu'))
-        model.add(Dense(        1, kernel_initializer='glorot_uniform', activation='sigmoid'))
+        model.add(Dense(X.shape[1], input_dim=X.shape[1], kernel_initializer='glorot_uniform', activation='relu'))
+        model.add(Dense(64, kernel_initializer='glorot_uniform', activation='relu'))
+        model.add(Dense( 1, kernel_initializer='glorot_uniform', activation='sigmoid'))
         # Compile model
         model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         # Fit the model
@@ -142,9 +127,8 @@ with tf.device("/gpu:0"):
         print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
         cvscores.append(scores[1] * 100)
         print(history.history.keys())  # summarize history for accuracy
-        Y_predict = model.predict(X[validate]) >= 0.5
-        print("cohen_kappa_score = ", cohen_kappa_score(Y_predict,Y[validate]))
-        print("accuracy_score    = ",    accuracy_score(Y_predict,Y[validate]))
+        print("cohen_kappa_score = ", cohen_kappa_score(model.predict(X[validate])>=0.5,Y[validate]))
+        print("accuracy_score    = ", accuracy_score(model.predict(X[validate])>=0.5,Y[validate]))
         i += 1
 
 print("%.2f%% (+/- %.2f%%)" % (numpy.mean(cvscores), numpy.std(cvscores)))

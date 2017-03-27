@@ -66,7 +66,7 @@ df_table = df_table.reset_index()
 
 df_table_shape = df_table.shape
 print("before checkig and removing duplicates - df.shape = ", df_table.shape)
-# df_table.set_index('hhid-uid', inplace=True)
+# df_Lot.set_index('hhid-uid', inplace=True)
 df_table.drop_duplicates(subset='cookieid', keep=False, inplace=True)
 if df_table_shape != df_table.shape:
     print("removed rows with drop_duplicate cookies - df.shape = ", df.shape)
