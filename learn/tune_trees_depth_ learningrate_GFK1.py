@@ -42,7 +42,7 @@ LOT_FILE = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 GXL_DIR = "/ML_DATA/GFK/DE/Hyperlane/unimputed-target-groups/2017-02-01/"
 GXL_FILE = "GXL_data.tsv"
 TARGET   = "dep_tg_bin_gender_1"
-TARGET   = "dep_tg_bin_pet_owner_209"
+# TARGET   = "dep_tg_bin_pet_owner_209"
 # TARGET   = "dep_tg_bin_buyer_baby_products_227"
 
 if TEST:
@@ -118,15 +118,15 @@ label_encoded_y = Y
 
 model = XGBClassifier()
 
-n_estimators  = [100, 200, 300]
-max_depth     = [2, 3, 4]
-learning_rate = [0.1, 0.2] # [0.3, 0.2, 0.1, 0.03, 0.01]
+n_estimators  = [200] # [100, 200]
+max_depth     = [2] # [2, 3, 4]
+learning_rate = [0.05, 0.1] # [0.3, 0.2, 0.1, 0.03, 0.01]
 colsample_bytree = [1.0]
 subsample = [1.0]
-min_child_weight = [0.9, 0.1]
+min_child_weight = [0.9, 0.95]
 scale_pos_weight = [1.0]
-reg_lambda       = [0.9, 1.0]
-reg_alpha        = [0.0, 0.1]
+reg_lambda       = [0.86, 0.88, 0.90]
+reg_alpha        = [0.00, 0.02, 0.04, 0.06, 0.08, 0.10]
 
 param_grid = dict(max_depth       = max_depth,
                   n_estimators    = n_estimators,
@@ -137,7 +137,11 @@ param_grid = dict(max_depth       = max_depth,
                   scale_pos_weight= scale_pos_weight,
                   reg_lambda = reg_lambda,
                   reg_alpha = reg_alpha)
-
+'''
+fit_params={"early_stopping_rounds":42, 
+            "eval_metric" : "mae", 
+            "eval_set" : [[testX, testY]]}
+'''
 kfold = StratifiedKFold(n_splits=8, shuffle=True, random_state=7)
 grid_search = GridSearchCV(model, param_grid, scoring="neg_log_loss", n_jobs=-1, cv=kfold, verbose=2)
 
@@ -148,9 +152,10 @@ model = grid_result.best_estimator_
 print("best model = ", model)
 
 cv_results = pd.DataFrame.from_dict(grid_result.cv_results_)
-print("cv_results:")
-print(cv_results)
-cv_results.to_csv(HOME_DIR+"/ML_DATA/GFK/model/xgb_model_cv_results_"+TARGET+".tsv", sep='\t')
+cv_results.sort_values('rank_test_score', inplace=True)
+# print("cv_results:")
+# print(cv_results)
+cv_results.to_csv(HOME_DIR+"/ML_DATA/GFK/model/xgb_model_cv_results_" + TARGET + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + ".tsv", sep='\t')
 
 # save best model
 file_out = HOME_DIR+"/ML_DATA/GFK/model/xgb_model_"+TARGET+".pkl"
