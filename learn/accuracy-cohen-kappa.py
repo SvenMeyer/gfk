@@ -24,3 +24,15 @@ for i in range(10):
     print("cohen_kappa_score = ", cohen_kappa_score(a,b),end="")
     print(" - accuracy_score    = ", accuracy_score(a,b))
     b[i]=0
+
+labeler2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+labeler1 = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+print(cohen_kappa_score(labeler1, labeler2))
+
+a = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=int)
+b = copy.deepcopy(a)
+print(a)
+for i in range(10):
+    print("cohen_kappa_score = ", cohen_kappa_score(a,b),end="")
+    print(" - accuracy_score    = ", accuracy_score(a,b))
+    b[i]=1
