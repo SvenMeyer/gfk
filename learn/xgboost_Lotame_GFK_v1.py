@@ -33,6 +33,7 @@ import pickle
 
 TEST = False
 NORM = True
+SCALE= False
 PCA  = False
 PCA_comp = 256
 
@@ -41,11 +42,12 @@ if not os.path.isdir(HOME_DIR):
     HOME_DIR = os.path.expanduser("~")
 LOT_DIR = "/ML_DATA/GFK/DE/Lotame/"
 LOT_FILE = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
+LOT_FILE_no_index_cols = 2
 GXL_DIR = "/ML_DATA/GFK/DE/Hyperlane/unimputed-target-groups/2017-02-01/"
 GXL_FILE = "data.tsv"
 TARGET   = "dep_tg_bin_gender_1"
-TARGET   = "dep_tg_bin_pet_owner_209"
-TARGET   = "dep_tg_bin_buyer_baby_products_227"
+# TARGET   = "dep_tg_bin_pet_owner_209"
+# TARGET   = "dep_tg_bin_buyer_baby_products_227"
 
 if TEST:
     LOT_FILE = "Lot_data_test"
@@ -62,6 +64,8 @@ print("df_GXL.shape = ", df_GXL.shape)
 # df_Lot = pd.read_pickle(HOME_DIR + LOT_DIR + LOT_FILE + ".pkl")
 df_Lot = pd.read_csv(HOME_DIR + LOT_DIR + LOT_FILE + ".tsv", sep='\t')  # , dtype=np.int32)
 print("df_Lot.shape = ", df_Lot.shape)
+Lot_no_features = df_Lot.shape[1] - LOT_FILE_no_index_cols
+print("Lot_no_features =", Lot_no_features)
 # print(df_Lot.iloc[:10,:5])
 '''
 # Pre-Processing
@@ -78,31 +82,44 @@ ep = df_Lot.astype(bool).sum(axis=1)
 ep[ep<100].hist(bins=100, figsize=(10,10))
 '''
 print("TARGET = ", TARGET)
-df = pd.merge(df_Lot, df_GXL[[COL_NAME_PID, TARGET]], on=COL_NAME_PID, how='inner')
-print(df.shape)
+df_data = pd.merge(df_Lot, df_GXL[[COL_NAME_PID, TARGET]], on=COL_NAME_PID, how='inner')
+print(df_data.shape)
 # print(df)
 
 # df = df[df[TARGET] != -1]
-df.drop(df.index[df[TARGET] == -1], inplace=True)  # df[TARGET] = df.iloc[:,-1]
+df = df_data.drop(df_data.index[df_data[TARGET] == -1])  # df_data[TARGET] = df_data.iloc[:,-1]
 print("dropped rows with no target data : df.shape =", df.shape)
-
-# only keep rows = users with min_events
-min_events = 1
-df = df[df.iloc[:,2:].sum(axis=1) >= min_events]
-print("dropped rows with with less than", min_events, "event : df.shape =", df.shape)
 
 # drop duplicate columns
 df = df.T.drop_duplicates().T
 print("dropped duplicate columns : df.shape =", df.shape)
 
-X_data = df.iloc[:, 2:-1].values.astype('float32')
+df_column_names=pd.DataFrame(df.columns)
+df_column_names.to_csv(HOME_DIR+"/ML_DATA/GFK/DE/model/column_names.tsv", sep='\t')
+
+# def pre_process_X(df): # return numpy_array
+
+# only keep rows (= users) with min_events
+if TEST:
+    min_events = 1
+else:
+    min_events = 100
+low_events = df.iloc[:,LOT_FILE_no_index_cols:].sum(axis=1) < min_events
+df_low_events = df[low_events]
+df = df[~low_events]
+print("dropped rows with with less than", min_events, "events : df.shape =", df.shape)
+
+
+
+X_data = df.iloc[:, LOT_FILE_no_index_cols:-1].values.astype('float32')
 
 if NORM:
     norm_scale = preprocessing.Normalizer(copy=False).fit(X_data)
     X_data = norm_scale.transform(X_data)
 else:
-    std_scale = preprocessing.StandardScaler(copy=False).fit(X_data)
-    X_data = std_scale.transform(X_data)
+    if SCALE:
+        std_scale = preprocessing.StandardScaler(copy=False).fit(X_data)
+        X_data = std_scale.transform(X_data)
 
 if PCA:
     print("Start PCA", PCA_comp, " ... ", end="")
@@ -117,9 +134,6 @@ print("X_data.shape = ", X_data.shape)
 Y_data = df.iloc[:, -1].values.astype('float32').reshape(-1, 1)  # reshape because StandardScaler does not accept 1-D arrays any more
 minmax_scale = preprocessing.MinMaxScaler().fit(Y_data)
 Y_data = minmax_scale.transform(Y_data).ravel()  # ravel back to 1-D array
-
-df_column_names=pd.DataFrame(df.columns)
-df_column_names.to_csv(HOME_DIR+"/ML_DATA/GFK/DE/model/column_names.tsv", sep='\t')
 
 # t-sne visualization
 '''
@@ -144,6 +158,9 @@ X_data_tsne = tsne.fit_transform(X_data)
 X, X_test, Y, Y_test = train_test_split(X_data, Y_data, test_size=0.25, random_state=1)
 
 label_encoded_y = Y
+
+if TEST:
+    exit()
 
 model = XGBClassifier()
 
@@ -172,6 +189,7 @@ fit_params={"early_stopping_rounds":42,
             "eval_metric" : "mae", 
             "eval_set" : [[testX, testY]]}
 '''
+
 kfold = StratifiedKFold(n_splits=8, shuffle=True, random_state=7)
 grid_search = GridSearchCV(model, param_grid, scoring="neg_log_loss", n_jobs=-1, cv=kfold, verbose=2)
 
