@@ -35,6 +35,7 @@ while data_files_count > 0:
     print('TIMESTAMP\tUID\tGEO\tURL\tCATEGORIES\tUSERAGENT\tMETA_KEYWORDS\tKEY_TERMS\tENTITIES', file = output_file)
     
     n_cookies = 0
+    n_lines   = 0
     for datafile in data_files:
         print("start processing file : ", datafile)
         i=0
@@ -51,10 +52,11 @@ while data_files_count > 0:
         print(i, "lines processed - ", end='')
         print(n, "panel cookie events found")
         n_cookies += n
+        n_lines   += i
         
     output_file.close()    
     print(n_cookies, "TOTAL NUMBER of panel cookie events found for day", day.strftime('%Y%m%d'))
-    print(day.strftime('%Y%m%d') + '\t' + i + '\t' + n_cookies, file = stat_file)
+    print(day.strftime('%Y%m%d') + '\t' + str(n_lines) + '\t' + str(n_cookies), file = stat_file)
     
     day += timedelta(days=1)
     FILE_WILDCARD = "pixelview-turbo-no-porn-de." + day.strftime('%Y%m%d') + "-????.????.log.gz"
