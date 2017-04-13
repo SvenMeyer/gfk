@@ -21,7 +21,7 @@ data_filename = "pixelview-turbo-no-porn-de.20170221-????.????"
 date_start = date(2017,2,21)
 date_end   = date(2017,3,21)
 dates = pd.date_range(date_start, date_end)
-
+print("dates to be processed:", dates)
 
 
 header_file = open(os.path.join(DATA_DIR, COL_NAME_FILE), 'r')
