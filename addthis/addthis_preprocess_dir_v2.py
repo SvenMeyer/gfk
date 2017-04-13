@@ -34,8 +34,7 @@ stat_file = open(os.path.join(output_dir, 'statistics.tsv'), "w")
 print('DAY\tLINES\tEVENTS\tERRORS', file = stat_file)
 error_file = open(os.path.join(output_dir, 'error.log'), "w")
 
-#day = date(2017,2,22)
-day = date(2017,3,8)
+day = date(2017,2,22)
 
 header = 'TIMESTAMP\tUID\tGEO\tURL\tCATEGORIES\tUSERAGENT\tMETA_KEYWORDS\tKEY_TERMS\tENTITIES'
 output_file_all = open(os.path.join(output_dir, 'addthis_panel.tsv'), 'w')
@@ -54,13 +53,15 @@ while data_files_count > 0:
     n_cookies = 0
     n_lines   = 0
     n_errors    = 0
-    try:
-        for datafile in data_files:
-            print("start processing file : ", datafile)
-            i=0
-            n=0
+
+    for datafile in data_files:
+        print("start processing file : ", datafile)
+        i=0
+        n=0
+        
+        try:
             with gzip.open(os.path.join(input_dir, datafile), 'r') as f:
-                lines
+                lines = [x.decode('utf8').strip() for x in f.readlines()]
                 for line in lines[1:]:
                     i += 1
                     cookie = line.split('\t')[1]
@@ -68,18 +69,23 @@ while data_files_count > 0:
                         n += 1
                         print(line, file=output_file)
                         print(line, file=output_file_all)
+                        
             print(i, "lines processed - ", end='')
             print(n, "panel cookie events found")
             n_cookies += n
             n_lines   += i
-    except Exception as error:
-        print("ERROR while processing file :" + datafile, file=error_file)
-        print(str(error), file=error_file)
-        n_errors += 1
-        
+            
+        except Exception as error:
+            n_errors += 1
+            print("ERROR count = " + str(n_errors), file=error_file)
+            print("while processing file : " + datafile, file=error_file)
+            print(str(error), file=error_file)
+            error_file.flush()
+             
     output_file.close()    
     print(n_cookies, "TOTAL NUMBER of panel cookie events found for day", day.strftime('%Y%m%d'))
     print(day.strftime('%Y%m%d') + '\t' + str(n_lines) + '\t' + str(n_cookies) + '\t' + str(n_errors), file = stat_file)
+    stat_file.flush()
     
     day += timedelta(days=1)
     FILE_WILDCARD = "pixelview-turbo-no-porn-de." + day.strftime('%Y%m%d') + "-????.????.log.gz"
