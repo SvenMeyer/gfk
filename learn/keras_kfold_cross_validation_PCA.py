@@ -20,14 +20,18 @@ from sklearn import decomposition
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import cohen_kappa_score, confusion_matrix, accuracy_score
 
+import matplotlib.pyplot as plt
+
 print("keras.__version__ = ", keras.__version__)
 print("tensorflow.__version__ = ", tf.__version__)
+
+TENSORFLOW = False
 
 # import matplotlib.pyplot as plt
 
 TEST = False
 PCA  = True
-PCA_comp = 256
+PCA_comp = 128
 
 HOME_DIR = "/media/sf_SHARE"
 if not os.path.isdir(HOME_DIR):
@@ -96,17 +100,20 @@ X, X_test, Y, Y_test = train_test_split(X_data, Y_data, test_size=0.2, random_st
 seed = 7
 numpy.random.seed(seed)
 
-# Tensorboard callback
-tbCallback = keras.callbacks.TensorBoard(log_dir=HOME_DIR+'/ML_DATA/Tensorboard', histogram_freq=10, write_graph=True, write_images=True)
+if TENSORFLOW:
+    # Tensorboard callback
+    tbCallback = keras.callbacks.TensorBoard(log_dir=HOME_DIR+'/ML_DATA/Tensorboard', histogram_freq=10, write_graph=True, write_images=True)
 # checkpoint
 # filepath=HOME_DIR+"/ML_DATA/GFK/model/weights-improvement-{epoch:02d}-{val_loss:.2f}.hdf5"
 # checkpoint = keras.callbacks.ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 # callbacks_list = [checkpoint, tbCallback]
-callbacks_list = [tbCallback]
+    callbacks_list = [tbCallback]
+else:
+    callbacks_list = list()
 
 i = 1
-no_splits=10
-with tf.device('/gpu:0'):
+no_splits=4
+with tf.device('/cpu:0'):
     kfold = StratifiedKFold(n_splits=no_splits, shuffle=True) #, random_state=seed)
     cvscores = []
     for train, validate in kfold.split(X, Y):
@@ -115,36 +122,47 @@ with tf.device('/gpu:0'):
       # create model
         model = Sequential()
         model.add(Dense(X.shape[1], input_dim=X.shape[1], kernel_initializer='glorot_uniform', activation='relu'))
-        model.add(Dense(64, kernel_initializer='glorot_uniform', activation='relu'))
+        model.add(Dense(32, kernel_initializer='glorot_uniform', activation='relu'))
         model.add(Dense( 1, kernel_initializer='glorot_uniform', activation='sigmoid'))
         # Compile model
         model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
         # Fit the model
-        history = model.fit(X[train], Y[train], epochs=200, batch_size=10, verbose=0, callbacks=callbacks_list)
+        history = model.fit(X[train], Y[train], epochs=3000, batch_size=32, verbose=0, callbacks=callbacks_list)
         print("DONE in ", (time.time() - start), "sec")
         # evaluate the model
-        scores = model.evaluate(X[validate], Y[validate], verbose=2)
+        X_validate = X[validate]
+        Y_validate = Y[validate]
+        scores = model.evaluate(X_validate, Y_validate, verbose=2)
         print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
         cvscores.append(scores[1] * 100)
         print(history.history.keys())  # summarize history for accuracy
-        print("cohen_kappa_score = ", cohen_kappa_score(model.predict(X[validate])>=0.5,Y[validate]))
-        print("accuracy_score    = ", accuracy_score(model.predict(X[validate])>=0.5,Y[validate]))
+        print("cohen_kappa_score = ", cohen_kappa_score(model.predict(X_validate)>=0.5, Y_validate))
+        print("accuracy_score    = ",    accuracy_score(model.predict(X_validate)>=0.5, Y_validate))
+#       pd.DataFrame(model.predict(X_validate[Y_validate==0])).hist(bins=20)
+#       pd.DataFrame(model.predict(X_validate[Y_validate==1])).hist(bins=20)        
         i += 1
 
 print("%.2f%% (+/- %.2f%%)" % (numpy.mean(cvscores), numpy.std(cvscores)))
 
-print("evaluate TEST-set (out of training set)")
+print("*** evaluate TEST-set (out of training set)")
+y_pred_test = model.predict(X_test) >= 0.5
 print("confusion_matrix")
-print(confusion_matrix(model.predict(X_test)>=0.5,Y_test))
-print("cohen_kappa_score = ", cohen_kappa_score(model.predict(X_test)>=0.5,Y_test))
-print("accuracy_score    = ", accuracy_score(model.predict(X_test)>=0.5,Y_test))
+print(                         confusion_matrix(y_pred_test, Y_test))
+print("cohen_kappa_score = ", cohen_kappa_score(y_pred_test, Y_test))
+print("accuracy_score    = ",    accuracy_score(y_pred_test, Y_test))
+
+fig, axes = plt.subplots(nrows=1, ncols=2, sharey=True)
+axes[0].set_title('TARGET = 0')
+axes[1].set_title('TARGET = 1')
+pd.DataFrame(model.predict(X_test[Y_test==0])).hist(bins=20, ax=axes[0])
+pd.DataFrame(model.predict(X_test[Y_test==1])).hist(bins=20, ax=axes[1])
 
 # serialize model to JSON
 model_json = model.to_json()
-with open(HOME_DIR+'/ML_DATA/GFK/model/lotame_model.json', "w") as json_file:
+with open(HOME_DIR+'/ML_DATA/GFK/DE/model/lotame_model.json', "w") as json_file:
     json_file.write(model_json)
 # serialize weights to HDF5
-model.save_weights(HOME_DIR+'/ML_DATA/GFK/model/lotame_model_weights.h5')
+model.save_weights(HOME_DIR+'/ML_DATA/GFK/DE/model/lotame_model_weights.h5')
 print("Saved model to disk")
 
 '''

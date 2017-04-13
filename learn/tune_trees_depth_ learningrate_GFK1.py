@@ -27,12 +27,14 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedKFold, train_test_split, GridSearchCV, cross_val_score
 from sklearn.metrics import cohen_kappa_score, confusion_matrix, accuracy_score
 
+from matplotlib import pyplot as plt
+
 import pickle
 
 TEST = False
 NORM = True
 PCA  = False
-PCA_comp = 1024
+PCA_comp = 256
 
 HOME_DIR = "/media/sf_SHARE"
 if not os.path.isdir(HOME_DIR):
@@ -40,10 +42,10 @@ if not os.path.isdir(HOME_DIR):
 LOT_DIR = "/ML_DATA/GFK/DE/Lotame/"
 LOT_FILE = "part-r-00000-93628840-fd71-4a78-8bdb-6cafdf2b2738"
 GXL_DIR = "/ML_DATA/GFK/DE/Hyperlane/unimputed-target-groups/2017-02-01/"
-GXL_FILE = "GXL_data.tsv"
+GXL_FILE = "data.tsv"
 TARGET   = "dep_tg_bin_gender_1"
-# TARGET   = "dep_tg_bin_pet_owner_209"
-# TARGET   = "dep_tg_bin_buyer_baby_products_227"
+TARGET   = "dep_tg_bin_pet_owner_209"
+TARGET   = "dep_tg_bin_buyer_baby_products_227"
 
 if TEST:
     LOT_FILE = "Lot_data_test"
@@ -105,12 +107,32 @@ if PCA:
 
 print("X_data.shape = ", X_data.shape)
 
-Y_data = df.iloc[:, -1].values.astype('float32').reshape(-1, 1)  # reshape because StandardScaler does not accept 1d arrays any more
+Y_data = df.iloc[:, -1].values.astype('float32').reshape(-1, 1)  # reshape because StandardScaler does not accept 1-D arrays any more
 minmax_scale = preprocessing.MinMaxScaler().fit(Y_data)
-Y_data = minmax_scale.transform(Y_data).ravel()  # ravel back to 1d array
+Y_data = minmax_scale.transform(Y_data).ravel()  # ravel back to 1-D array
 
 df_column_names=pd.DataFrame(df.columns)
-df_column_names.to_csv(HOME_DIR+"/ML_DATA/GFK/model/column_names.tsv", sep='\t')
+df_column_names.to_csv(HOME_DIR+"/ML_DATA/GFK/DE/model/column_names.tsv", sep='\t')
+
+# t-sne visualization
+
+def plot_embedding(x, y):
+    cm = plt.cm.get_cmap('RdYlGn')
+    f = plt.figure(figsize=(13, 13))
+    ax = plt.subplot(aspect='equal')
+    sc = ax.scatter(x[:,0], x[:,1], lw=0, s=40, c=y, cmap=cm)
+    plt.xlim(-25, 25)
+    plt.ylim(-25, 25)
+    ax.axis('off')
+    ax.axis('tight')
+    plt.show()
+
+import sklearn.manifold
+# weights = model.get_layer(index={your layer index}).get_weights()
+tsne = sklearn.manifold.TSNE(n_components=2, random_state=0, verbose=1)
+X_data_tsne = tsne.fit_transform(X_data)
+# plot_embedding(X_data_tsne, Y_data)
+
 
 X, X_test, Y, Y_test = train_test_split(X_data, Y_data, test_size=0.25, random_state=1)
 
@@ -120,13 +142,13 @@ model = XGBClassifier()
 
 n_estimators  = [200] # [100, 200]
 max_depth     = [2] # [2, 3, 4]
-learning_rate = [0.05, 0.1] # [0.3, 0.2, 0.1, 0.03, 0.01]
+learning_rate = [0.1] # [0.3, 0.2, 0.1, 0.03, 0.01]
 colsample_bytree = [1.0]
-subsample = [1.0]
-min_child_weight = [0.9, 0.95]
-scale_pos_weight = [1.0]
-reg_lambda       = [0.86, 0.88, 0.90]
-reg_alpha        = [0.00, 0.02, 0.04, 0.06, 0.08, 0.10]
+subsample =        [1.0]
+min_child_weight = [0.95] # [0.9, 0.95]
+scale_pos_weight = [1.00]
+reg_lambda       = [0.750] # [0.86, 0.88, 0.90]
+reg_alpha        = [0.00] # [0.00, 0.02, 0.04, 0.06, 0.08, 0.10]
 
 param_grid = dict(max_depth       = max_depth,
                   n_estimators    = n_estimators,
@@ -137,6 +159,7 @@ param_grid = dict(max_depth       = max_depth,
                   scale_pos_weight= scale_pos_weight,
                   reg_lambda = reg_lambda,
                   reg_alpha = reg_alpha)
+# objective="binary:logistic"
 '''
 fit_params={"early_stopping_rounds":42, 
             "eval_metric" : "mae", 
@@ -155,10 +178,10 @@ cv_results = pd.DataFrame.from_dict(grid_result.cv_results_)
 cv_results.sort_values('rank_test_score', inplace=True)
 # print("cv_results:")
 # print(cv_results)
-cv_results.to_csv(HOME_DIR+"/ML_DATA/GFK/model/xgb_model_cv_results_" + TARGET + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + ".tsv", sep='\t')
+cv_results.to_csv(HOME_DIR+"/ML_DATA/GFK/DE/model/xgb_model_cv_results_" + TARGET + '_' + time.strftime("%Y-%m-%d_%H-%M-%S") + ".tsv", sep='\t')
 
 # save best model
-file_out = HOME_DIR+"/ML_DATA/GFK/model/xgb_model_"+TARGET+".pkl"
+file_out = HOME_DIR+"/ML_DATA/GFK/DE/model/xgb_model_"+TARGET+".pkl"
 print("save model to : ", file_out, end='')
 pickle.dump(model, open(file_out, "wb"))
 print(" ... DONE")
@@ -181,11 +204,17 @@ print("cohen_kappa_score = ", cohen_kappa_score(y_pred_train, label_encoded_y))
 print("accuracy_score    = ",    accuracy_score(y_pred_train, label_encoded_y))
 
 print("*** evaluate TEST-set (out of training set)")
-y_pred_test = model.predict(X_test) >= 0.5
+y_pred_test = model.predict(X_test)
 print("confusion_matrix")
 print(                         confusion_matrix(y_pred_test, Y_test))
 print("cohen_kappa_score = ", cohen_kappa_score(y_pred_test, Y_test))
 print("accuracy_score    = ",    accuracy_score(y_pred_test, Y_test))
+
+fig, axes = plt.subplots(nrows=1, ncols=2, sharey=True)
+axes[0].set_title('TARGET = 0')
+axes[1].set_title('TARGET = 1')
+pd.DataFrame(model.predict(X_test[Y_test==0])).hist(bins=20, ax=axes[0])
+pd.DataFrame(model.predict(X_test[Y_test==1])).hist(bins=20, ax=axes[1])
 
 '''
 # plot_importance(model) # not available within sklearn wrapper of XGBoost
