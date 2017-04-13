@@ -18,8 +18,17 @@ input_dir = os.path.join(WORK_DIR , 'data')
 print("input_dir  =", input_dir)
 print("output_dir =", output_dir)
 
+# read cookie list from file and remove malformed cookies
 cookie_df  = pd.read_csv(os.path.join(WORK_DIR,'addthis_cookies_2017-04-12.csv'))
 cookie_set = set(cookie_df['addthis_uid'])
+cookie_set.discard('')
+cookie_set.discard('nan')
+cookie_set.discard('0000000000000000')
+remove_set = set()
+for c in cookie_set:
+    if (type(c) != str) or (len(c) != 16):
+        remove_set.add(c)
+cookie_set.discard(remove_set)
 
 stat_file_name = os.path.join(output_dir, 'statistics.tsv')
 stat_file = open(stat_file_name, "w")
