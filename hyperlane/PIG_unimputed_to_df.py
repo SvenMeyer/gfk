@@ -1,3 +1,11 @@
+"""
+This program imports GfK unimputed target group data and generates one csv file
+input : directory location containing files from GXL PIG
+output: tab separated csv file with header 
+
+@version: 1.0
+@author : Sven Meyer
+"""
 import os
 import glob
 import pandas as pd
@@ -10,7 +18,7 @@ FILE_WILDCARD = "part-r-?????"
 header_file = open(os.path.join(DATA_DIR, COL_NAME_FILE), 'r')
 header_list = header_file.readline().split(';')
 
-data_files = glob.glob(os.path.join(DATA_DIR,FILE_WILDCARD))
+data_files = glob.glob(os.path.join(DATA_DIR, FILE_WILDCARD))
 
 # version 1 : does not work if sep is specified
 # df = pd.concat(map(pd.read_csv,          data_files))
@@ -39,6 +47,6 @@ else:
 
 df.set_index(header_list[0], inplace=True)
 
-df.to_csv(os.path.join(DATA_DIR, 'data.csv'), sep='\t')
+df.to_csv(os.path.join(DATA_DIR, 'data.tsv'), sep='\t')
 
 print("DONE !")
