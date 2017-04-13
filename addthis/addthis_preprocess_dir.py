@@ -6,13 +6,16 @@ import gzip
 import json
 import pandas as pd
 
+# asuming we are on the laptop VM
 HOME_DIR = "/media/sf_SHARE"
-if not os.path.isdir(HOME_DIR):
-    HOME_DIR = os.path.expanduser("~")
 WORK_DIR = os.path.join(HOME_DIR, "ML_DATA/GFK/AddThis/")
-input_dir = os.path.join(WORK_DIR , 'data')
-print("input_dir =", input_dir)
 output_dir = os.path.join(WORK_DIR , 'data_panel')
+if not os.path.isdir(HOME_DIR): # we are onthe PC
+    HOME_DIR = os.path.expanduser("~")
+    WORK_DIR   = "/media/sumeyer/WD_USB_4TB/SHARE/ML_DATA/GFK/AddThis"
+    output_dir = "/media/sumeyer/SSD_2/ML_DATA/GFK/AddThis/data_panel"
+input_dir = os.path.join(WORK_DIR , 'data')
+print("input_dir  =", input_dir)
 print("output_dir =", output_dir)
 
 cookie_df  = pd.read_csv(os.path.join(WORK_DIR,'addthis_cookies_2017-04-12.csv'))
@@ -22,7 +25,11 @@ stat_file_name = os.path.join(output_dir, 'statistics.tsv')
 stat_file = open(stat_file_name, "w")
 print('DAY\tLINES\tEVENTS', file = stat_file)
 
-day = date(2017,3,20)
+day = date(2017,2,22)
+
+header = 'TIMESTAMP\tUID\tGEO\tURL\tCATEGORIES\tUSERAGENT\tMETA_KEYWORDS\tKEY_TERMS\tENTITIES'
+output_file_all = open(os.path.join(output_dir, 'addthis_panel.tsv'), 'w')
+print(header, file = output_file_all)
 
 FILE_WILDCARD = "pixelview-turbo-no-porn-de." + day.strftime('%Y%m%d') + "-????.????.log.gz"
 data_files = glob.glob(os.path.join(input_dir, FILE_WILDCARD))
@@ -31,8 +38,8 @@ print(data_files_count, "files found for day", day.strftime('%Y%m%d'))
 
 while data_files_count > 0:
     output_file_name = os.path.join(output_dir, 'addthis_panel_' + day.strftime('%Y%m%d') + '.tsv')
-    output_file = open(output_file_name, "w")
-    print('TIMESTAMP\tUID\tGEO\tURL\tCATEGORIES\tUSERAGENT\tMETA_KEYWORDS\tKEY_TERMS\tENTITIES', file = output_file)
+    output_file = open(output_file_name, 'w')
+    print(header, file = output_file)
     
     n_cookies = 0
     n_lines   = 0
@@ -48,7 +55,7 @@ while data_files_count > 0:
                 if cookie in cookie_set:
                     n += 1
                     print(line, file = output_file)
-        
+                    print(line, file = output_file_all)
         print(i, "lines processed - ", end='')
         print(n, "panel cookie events found")
         n_cookies += n
@@ -64,5 +71,6 @@ while data_files_count > 0:
     data_files_count = len(data_files)
     print(data_files_count, "files found for day", day.strftime('%Y%m%d'))
 
+output_file_all.close()
 stat_file.close()
 print("*** DONE ***")
