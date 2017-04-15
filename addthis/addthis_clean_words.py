@@ -47,9 +47,10 @@ df.fillna('', inplace=True)
 word_cols = list(['CATEGORIES','META_KEYWORDS','KEY_TERMS','ENTITIES'])
 
 # clean word colums, remove special chars and join all words into one additional 'word'-column
+# maybe this should become a class to avoid to copile re for each row ?
 # http://stackoverflow.com/questions/26886653/pandas-create-new-column-based-on-values-from-other-columns
 def clean_words(row):
-    rc = re.compile(r'[\d]|[^\w]', re.UNICODE)
+    rc = re.compile(r'(\%\w\w)|[^a-zA-ZäöüÄÖÜß]', re.UNICODE)
     words = rc.sub(" ", row['CATEGORIES']) + ' ' + rc.sub(" ", row['META_KEYWORDS']) + ' ' + rc.sub(" ", row['KEY_TERMS']) + ' ' + rc.sub(" ", row['ENTITIES'])
     return words
 
