@@ -31,7 +31,7 @@ df.fillna('', inplace=True)
 
 word_cols = list(['CATEGORIES','META_KEYWORDS','KEY_TERMS','ENTITIES'])
 
-# clean tag colums, remove special chars and join all words into one column
+# clean word colums, remove special chars and join all words into one additional 'word'-column
 # http://stackoverflow.com/questions/26886653/pandas-create-new-column-based-on-values-from-other-columns
 def clean_words(row):
     rc = re.compile(r'(\%\w\w)|[^\w]', re.UNICODE)
