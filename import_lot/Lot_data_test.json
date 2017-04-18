@@ -1,0 +1,17 @@
+# person 1 with one cookie
+{"cookieid":"c1111111","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"11","uid":"01"}
+{"cookieid":"c1111111","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"11","uid":"01"}
+{"cookieid":"c1111111","featurekey":"LTMBEH_3","featurevalue":1,"hhid":"11","uid":"01"}
+# person 2 with one cookie
+{"cookieid":"c2222222","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"22","uid":"01"}
+{"cookieid":"c2222222","featurekey":"LTMBEH_2","featurevalue":1,"hhid":"22","uid":"01"}
+{"cookieid":"c2222222","featurekey":"LTMBEH_3","featurevalue":1,"hhid":"22","uid":"01"}
+# one person having 2 cookies
+{"cookieid":"caaaaaaa","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"33","uid":"01"}
+{"cookieid":"cbbbbbbb","featurekey":"LTMBEH_2","featurevalue":1,"hhid":"33","uid":"01"}
+# 2 people in same hausehold sharing one cookie
+{"cookieid":"c5555555","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"44","uid":"01"}
+{"cookieid":"c5555555","featurekey":"LTMBEH_2","featurevalue":1,"hhid":"44","uid":"01"}
+{"cookieid":"c5555555","featurekey":"LTMBEH_1","featurevalue":1,"hhid":"44","uid":"02"}
+
+

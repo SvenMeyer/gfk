@@ -10,7 +10,7 @@ columns ['TIMESTAMP', 'UID', 'GEO', 'URL', 'CATEGORIES', 'USERAGENT',
 2 OUTPUT :
 
 """
-TEST = True
+TEST = False
 
 import os
 # import glob
@@ -33,8 +33,18 @@ print("loading file : ", input_file_path)
 df = pd.read_csv(input_file_path, sep='\t', dtype=str)
 print("df.shape = ", df.shape)
 print("df.columns : ", df.columns)
+print("number of unique cookies = ", df['addthis_ID'].unique().shape[0])
+print()
 
 print("loading spacy vocab")
-spacy.load('en')
+start = time.time()
+nlp = spacy.load('en')
+print("done in %.2f seconds)" % (time.time() - start))
 
+w = df.loc[0][-1]
+print(w)
+doc = nlp(w)
+for w in doc:
+    print(w.text, w.pos_)
 
+print(doc.vector)
