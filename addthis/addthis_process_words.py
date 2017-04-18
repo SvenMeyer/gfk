@@ -34,3 +34,7 @@ df = pd.read_csv(input_file_path, sep='\t', dtype=str)
 print("df.shape = ", df.shape)
 print("df.columns : ", df.columns)
 
+print("loading spacy vocab")
+spacy.load('en')
+
+
