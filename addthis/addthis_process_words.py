@@ -10,7 +10,7 @@ columns ['TIMESTAMP', 'UID', 'GEO', 'URL', 'CATEGORIES', 'USERAGENT',
 2 OUTPUT :
 
 """
-TEST = False
+TEST = True
 
 import os
 # import glob
@@ -19,6 +19,7 @@ import time
 import pandas as pd
 import numpy as np
 # import re
+import operator
 import spacy
 
 # asuming we are on the laptop VM
@@ -36,15 +37,39 @@ print("df.columns : ", df.columns)
 print("number of unique cookies = ", df['addthis_ID'].unique().shape[0])
 print()
 
-print("loading spacy vocab")
+lang = 'de'
+print("loading spacy vocab:", lang)
 start = time.time()
-nlp = spacy.load('en')
+nlp = spacy.load(lang)
 print("done in %.2f seconds)" % (time.time() - start))
 
-w = df.loc[0][-1]
-print(w)
-doc = nlp(w)
-for w in doc:
-    print(w.text, w.pos_)
+print('-----------------------------------------------------------------')
+topics  = list(['Wein', 'Computer', 'Reisen', 'fliegen', 'Gesundheit', 'Sport', 'Finanzen', 'Geld', 'kochen'])
+samples = list([9, 12, 27, 121])
 
-print(doc.vector)
+for sample in samples:
+    words = df.iat[sample,-1]
+    print(words, '\n')
+    doc = nlp(words)
+    for w in doc:
+        print(w.text, w.pos_ , ' | ', end='')
+    print()
+#   print("doc.vector = ", doc.vector)  
+    sim_list = list()
+    for t in topics:
+        sim_list.append( [t, doc.similarity(nlp(t)) ] )
+    print(pd.DataFrame(sorted(sim_list, key = operator.itemgetter(1), reverse=True)))
+    print('-----------------------------------------------------------------')
+
+words = 'Urlaub Flugzeug Hotel Strand Ferien'
+print(words, '\n')
+doc = nlp(words)
+for w in doc:
+    print(w.text, w.pos_ , ' | ', end='')
+print()
+sim_list = list()
+for t in topics:
+    sim_list.append( [t, doc.similarity(nlp(t)) ] )
+print(pd.DataFrame(sorted(sim_list, key = operator.itemgetter(1), reverse=True)))
+print('-----------------------------------------------------------------')
+
